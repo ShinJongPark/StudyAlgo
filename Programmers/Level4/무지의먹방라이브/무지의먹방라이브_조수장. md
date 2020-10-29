@@ -1,0 +1,58 @@
+**최대한 많이 먹을 수 있는만큼 먹은 후 나머지 k만큼 먹어서 끝냄**
+    #include <string>
+    #include <vector>
+    #include <algorithm>
+    #include <numeric>
+
+    using namespace std;
+
+    int solution(vector<int> food_times, long long k) {
+        long long AmountOfRestFood = -1;            // 먹을 수 있는 음식 양
+        long long AmountOfAverEat = -1;             // 한 번에 먹을 수 있다고 생각되는 양
+        int NumOfRestFood = -1;                     // 먹을 수 있는 음식 개수
+
+        // 방송 중단까지 도저히 다 먹을 수 있는 양이 아니면 -1 반환
+        AmountOfRestFood = accumulate(food_times.begin(), food_times.end(), (long long)0);
+        if(AmountOfRestFood <= k)   return -1;
+
+        // 최소 한 바퀴 이상 먹을 수 있을 때까지 큼직하게 먹는다.
+        while(k){
+            // 무지가 방송 중단까지 먹을 수 있는 평균 횟수를 구한다.
+            NumOfRestFood = count_if(food_times.begin(), food_times.end(), [](int food){ return food > 0; });
+            AmountOfAverEat = k / NumOfRestFood;
+            k -= AmountOfAverEat * NumOfRestFood;
+
+            // 평균횟수가 1이상이면 한바퀴 돈다.
+            if(AmountOfAverEat){
+                for(int i = 0; i < food_times.size(); i++){
+                    if(!food_times[i])  continue;
+
+                    // 음식이 평균섭취량보다 부족하면 헛으로 쓰인 시간을 다시 보강한다.
+                    if(AmountOfAverEat > food_times[i]){
+                        k += AmountOfAverEat - food_times[i];
+                        food_times[i] = 0;
+                    }else
+                        food_times[i] -= AmountOfAverEat;
+                }
+            }else{
+                break;
+
+            }
+        }
+
+        // 방송이 중단될 때까지 먹는다
+        int idx = 0, cnt = 0;
+
+        while(1){   
+            if(food_times[idx]){
+                if(!k)  break;               
+
+                food_times[idx]--;
+                k--;
+            }                
+            idx = (++cnt) % food_times.size();
+        }     
+
+        if(accumulate(food_times.begin(), food_times.end(), (long long)0) == 0) return -1;
+        return idx + 1;
+    }
